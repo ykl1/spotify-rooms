@@ -1,39 +1,41 @@
 import React, { useState } from 'react'
+import { useHistory } from 'react-router-dom'
+import { getHashParams } from '../global'
 import socketIOClient from 'socket.io-client'
 const socket = socketIOClient.connect('http://192.168.0.64:8888')
 
 const RoomEntry = () => {
-
-  // getting the access token in React. 
-  // const getHashParams = () => {
-  //   let hashParams = {}
-  //   let e, r = /([^&;=]+)=?([^&;]*)/g,
-  //       q = window.location.hash.substring(1)
-  //   e = r.exec(q)
-  //   while (e) {
-  //     hashParams[e[1]] = decodeURIComponent(e[2])
-  //     e = r.exec(q)
-  //  }
-  //  return hashParams
-  // }
-  // const params = getHashParams()
-  // console.log(params)
-
   const [roomID, setRoomID] = useState('')
+  const history = useHistory()
+  const params = getHashParams()
+
+  const userInfo = {
+    host: true,
+    access_token: params.access_token,
+    refresh_token: params.refresh_token,
+  }
 
   const createRoom = () => {
     const room = generateRandomStr(5)
-    setRoomID(room)
-    socket.emit('create', room)
+    socket.emit('create', { room, userInfo })
   }
+
+  socket.on('isCreated', ({ room, id }) => {
+    history.push(`/Room/${room}/${id}`)
+  })
 
   const joinRoom = () => {
-    socket.emit('join', roomID)
+    userInfo.host = false
+    socket.emit('joinRoom', { roomID, userInfo })
   }
 
-  const leaveRoom = () => {
-    socket.emit('leave', roomID)
-  }
+  socket.on('isJoined', ({ isValidRoom, id }) => {
+    if (isValidRoom) {
+      history.push(`/Room/${roomID}/${id}`)
+    } else {
+      alert('Room does not exist, please try again.')
+    }
+  })
 
   const generateRandomStr = (length) => {
     let text = ''
@@ -49,9 +51,7 @@ const RoomEntry = () => {
       <button onClick={() => createRoom()}>Create Room</button>
       <br />
       <input placeholder='Room ID' onChange={(e) => setRoomID(e.target.value)} />
-      <button onClick={() => joinRoom()}>Join Room</button>
-      <br />
-      <button onClick={() => leaveRoom()}>Leave Room</button>
+      <button onClick={() => joinRoom()}>Join Room</button>      
     </div>
   )
 }
