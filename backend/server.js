@@ -30,6 +30,7 @@ const allRooms = {}
 io.on('connection', socket => {
   console.log('a user is connected')
   const id = socket.id
+
   // creating a room. 
   socket.on('create', ({ room, userInfo }) => {
     userInfo.id = id
@@ -53,10 +54,17 @@ io.on('connection', socket => {
     socket.emit('isJoined', { isValidRoom, id })
   })
 
-  socket.on('leave', ({ room, userInfo }) => {
-    // if host leaves the room. 
-
-    // if regular person leaves the room. 
+  // leaving a room
+  socket.on('leave', ({ roomID, socketID }) => {
+    Object.keys(allRooms).forEach(key => {
+      if (key === roomID) {
+        allRooms[roomID].forEach((obj, index) => {
+          if (obj.id === socketID) {
+            allRooms[roomID].splice(index, 1)
+          }
+        })
+      }
+    })
     console.log(allRooms)
   })
 
