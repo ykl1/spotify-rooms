@@ -2,7 +2,10 @@ import React from 'react'
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
 import Home from './Home'
 import RoomEntry from './RoomEntry'
-import Room from './Room'
+import HostRoom from './HostRoom'
+import MemberRoom from './MemberRoom'
+import socketIOClient from 'socket.io-client'
+const socket = socketIOClient.connect('http://192.168.0.64:8888')
 
 const App = () => (
   <Router>
@@ -12,10 +15,19 @@ const App = () => (
           <Home />
         </Route>
         <Route path="/RoomEntry/:queryParams" exact>
-          <RoomEntry />
+          <RoomEntry
+            socket = {socket}
+          />
         </Route>
-        <Route path="/Room/:roomID/:socketID/:queryParams" exact>
-          <Room />
+        <Route path="/HostRoom/:roomID/:socketID/:queryParams" exact>
+          <HostRoom 
+            socket = {socket}
+          />
+        </Route>
+        <Route path="/MemberRoom/:roomID/:socketID/:queryParams" exact>
+          <MemberRoom 
+            socket = {socket}
+          />
         </Route>
       </Switch>
     </div>

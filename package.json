@@ -35,7 +35,8 @@
     "react-router-dom": "^5.2.0",
     "request": "^2.88.2",
     "socket.io": "^3.0.3",
-    "socket.io-client": "^3.0.3"
+    "socket.io-client": "^3.0.3",
+    "spotify-web-api-js": "^1.5.1"
   },
   "devDependencies": {
     "eslint": "^7.14.0",

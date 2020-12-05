@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import { getQueryStringParams } from '../global'
-import socketIOClient from 'socket.io-client'
-const socket = socketIOClient.connect('http://192.168.0.64:8888')
 
-const RoomEntry = () => {
+
+const RoomEntry = ({ socket }) => {
   const [roomID, setRoomID] = useState('')
   const history = useHistory()
   const { queryParams } = useParams()
@@ -17,13 +16,12 @@ const RoomEntry = () => {
   }
 
   const createRoom = () => {
-    console.log(params)
     const room = generateRandomStr(5)
     socket.emit('create', { room, userInfo })
   }
 
   socket.on('isCreated', ({ room, id }) => {
-    history.push(`/Room/${room}/${id}/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
+    history.push(`/HostRoom/${room}/${id}/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
   })
 
   const joinRoom = () => {
@@ -33,7 +31,7 @@ const RoomEntry = () => {
 
   socket.on('isJoined', ({ isValidRoom, id }) => {
     if (isValidRoom) {
-      history.push(`/Room/${roomID}/${id}/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
+      history.push(`/MemberRoom/${roomID}/${id}/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
     } else {
       alert('Room does not exist, please try again.')
     }

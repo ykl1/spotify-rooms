@@ -27,9 +27,22 @@ app.get('*', (_, res) => {
 
 const allRooms = {}
 
-io.on('connection', socket => {
+io.on('connection', (socket) => {
+  // when user is connected
   console.log('a user is connected')
   const id = socket.id
+  console.log(id)
+
+  // sends the host's info to all room members. 
+  socket.on('currentUserInfo', ({ is_playing, uri, progress_ms, roomID, name, albumArt }) => {
+    Object.keys(allRooms).forEach(key => {
+      if (key === roomID) {
+        allRooms[roomID].forEach(obj => {
+          socket.to(obj.id).emit('hostInfo', { is_playing, uri, progress_ms, name, albumArt })
+        })
+      }
+    })
+  })
 
   // creating a room. 
   socket.on('create', ({ room, userInfo }) => {
@@ -37,7 +50,6 @@ io.on('connection', socket => {
     allRooms[room] = [userInfo]
     socket.emit('isCreated', { room, id })
     console.log(allRooms)
-    console.log(`Room ${room} has been created, and ${userInfo} is the host data`)
   })
 
   // joining a room
@@ -50,8 +62,8 @@ io.on('connection', socket => {
         allRooms[key].push(userInfo)
       }
     })
-    console.log(allRooms)
     socket.emit('isJoined', { isValidRoom, id })
+    console.log(allRooms)
   })
 
   // leaving a room
@@ -66,6 +78,15 @@ io.on('connection', socket => {
       }
     })
     console.log(allRooms)
+  })
+
+  // get all users in specific room
+  socket.on('getUsers', (roomID) => {
+    Object.keys(allRooms).forEach(key => {
+      if (key === roomID) {
+        socket.emit('roomUsers', allRooms[key])
+      }
+    })
   })
 
   // when user disconnects
