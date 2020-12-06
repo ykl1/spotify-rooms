@@ -42,6 +42,8 @@ io.on('connection', (socket) => {
         })
       }
     })
+    // checking emission rate.
+    socket.emit('host', name)
   })
 
   // creating a room. 

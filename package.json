@@ -41,5 +41,12 @@
   "devDependencies": {
     "eslint": "^7.14.0",
     "eslint-plugin-react": "^7.21.5"
-  }
+  },
+  "browserslist": [
+    "last 3 and_chr versions",
+    "last 3 chrome versions",
+    "last 3 opera versions",
+    "last 3 ios_saf versions",
+    "last 3 safari versions"
+  ]
 }
