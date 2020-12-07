@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
-import { getQueryStringParams } from '../global'
 import Spotify from 'spotify-web-api-js'
 import { getQueryStringParams, generateRandomStr } from '../global'
 
@@ -17,16 +16,17 @@ const MemberRoom = ({ socket }) => {
   const [searchList, setSearchList] = useState([])
 
   socket.on('visualInfo', ({ name, albumArt }) => {
-    setNowPlaying({
-      name,
-      albumArt,
-      skipped: true
-    })
+    if (currPlaying.name !== name) {
+      setNowPlaying({
+        name,
+        albumArt,
+        skipped: true
+      })
+    }
   })
 
-  socket.on('hostInfo', ({ is_playing, uri, progress_ms, name, albumArt }) => {
-    console.log(is_playing)
-
+  socket.on('hostInfo', ({ is_playing, uri, progress_ms }) => {
+    console.log('this is the member jawn')
     memberSpotifyApi.getMyCurrentPlaybackState().then((response) => {
       if (response.item.uri !== uri) {
         try {
@@ -53,6 +53,8 @@ const MemberRoom = ({ socket }) => {
           }
         }
       }
+    }).catch((err) => {
+      console.log(err)
     })
   })
 

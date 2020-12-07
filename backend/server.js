@@ -61,7 +61,7 @@ io.on('connection', (socket) => {
     Object.keys(allRooms).forEach(key => {
       if (key === roomID) {
         allRooms[roomID].forEach(obj => {
-          socket.to(obj.id).emit('hostInfo', { is_playing, uri, progress_ms, name, albumArt })
+          socket.to(obj.id).emit('hostInfo', { is_playing, uri, progress_ms })
           socket.emit('host', { name, albumArt, is_playing })
         })
       }
