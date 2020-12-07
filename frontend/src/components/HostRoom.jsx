@@ -67,6 +67,11 @@ const HostRoom = ({socket}) => {
         let name = response.item.name
         let albumArt = response.item.album.images[0].url
 
+        setNowPlaying({
+          name,
+          albumArt
+        })
+
         socket.emit('currentUserInfo', {
           is_playing,
           uri,
@@ -78,10 +83,8 @@ const HostRoom = ({socket}) => {
       }).catch((err) => {
         console.log(`Error: ${err}`)
       })
-    }, 5000)
+    }, 2000)
     return () => clearInterval(interval)
-
-
   }, [])
 
 
