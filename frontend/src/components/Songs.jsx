@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Songs = ({ socketOrApi, uri, artist, name, albumArt, isHost }) => {
+const Songs = ({ socketOrApi, uri, artist, name, albumArt, isHost, roomID }) => {
   const queueSong = () => {
     if (isHost) {
       try {
@@ -9,9 +9,9 @@ const Songs = ({ socketOrApi, uri, artist, name, albumArt, isHost }) => {
         console.log(err)
       }
     } else {
-      
+      socketOrApi.emit('queueFromMember', { uri, roomID } )
+      console.log('hihihihi')
     }
-    
   }
   
   return (

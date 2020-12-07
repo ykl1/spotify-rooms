@@ -50,6 +50,15 @@ const HostRoom = ({socket}) => {
   }, [songSwitched])
 
   useEffect(() => {
+    // queues song into Host's queue from member room.
+    socket.on('host', ({ name, albumArt, is_playing }) => {
+      console.log('this is the returned test jawn on host')
+    })
+
+    socket.on('queueToHost', uri => {
+      hostSpotifyApi.queue(uri)
+    })
+
     const interval = setInterval(() => {
       hostSpotifyApi.getMyCurrentPlaybackState().then((response) => {
         let is_playing = response.is_playing
@@ -71,15 +80,10 @@ const HostRoom = ({socket}) => {
       })
     }, 5000)
     return () => clearInterval(interval)
+
+
   }, [])
 
-  socket.on('host', ({ name, albumArt, is_playing }) => {
-    console.log('this is the returned jawn on host')
-  })
-
-  // // get queued songs from non-host users
-  // socket.on('getQueuedSong', data => {
-  // })
 
   const searchSong = async (elem) => {
     setSongSearch(elem)
@@ -145,7 +149,7 @@ const HostRoom = ({socket}) => {
       <button onClick={() => skipPlayback()}>Skip</button>
       <button onClick={() => resumePlayback()}>Resume</button>
       <button onClick={() => pausePlayback()}>Pause</button>
-      <h1>click on song to queue it!</h1>
+      <p>click on song to add to queue</p>
       <input placeholder='Search a song' onChange={(e) => searchSong(e.target.value)} />
       <div>
         {searchList.map(elem => (
@@ -154,6 +158,7 @@ const HostRoom = ({socket}) => {
             socketOrApi={hostSpotifyApi}
             {...elem}
             isHost={true}
+            roomID={roomID}
           />
         ))}
       </div>

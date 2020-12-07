@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import Spotify from 'spotify-web-api-js'
 import { getQueryStringParams, generateRandomStr } from '../global'
+import Songs from './Songs'
 
 const MemberRoom = ({ socket }) => {
   const memberSpotifyApi = new Spotify()
@@ -15,66 +16,73 @@ const MemberRoom = ({ socket }) => {
   const [songSearch, setSongSearch] = useState('')
   const [searchList, setSearchList] = useState([])
 
-  socket.on('visualInfo', ({ name, albumArt }) => {
-    if (currPlaying.name !== name) {
+  useEffect(() => {
+    socket.on('visualInfo', ({ name, albumArt }) => {
+      if (currPlaying.name !== name) {
+        setNowPlaying({
+          name,
+          albumArt,
+          skipped: true
+        })
+      }
+    })
+
+    socket.on('hostInfo', ({ is_playing, uri, progress_ms, name, albumArt }) => {
       setNowPlaying({
         name,
         albumArt,
         skipped: true
       })
-    }
-  })
-
-  socket.on('hostInfo', ({ is_playing, uri, progress_ms }) => {
-    console.log('this is the member jawn')
-    memberSpotifyApi.getMyCurrentPlaybackState().then((response) => {
-      if (response.item.uri !== uri) {
-        try {
-          memberSpotifyApi.play({
-            uris: [uri],
-            'position_ms': progress_ms
-          })
-        } catch (err) {
-          console.log(err)
-        }
-      }
-      if (response.is_playing !== is_playing) {
-        if (is_playing) {
+      console.log('this is the member jawn')
+      memberSpotifyApi.getMyCurrentPlaybackState().then((response) => {
+        if (response.item.uri !== uri) {
           try {
-            memberSpotifyApi.play()
-          } catch (err) {
-            console.log(err)
-          }
-        } else {
-          try {
-            memberSpotifyApi.pause()
+            memberSpotifyApi.play({
+              uris: [uri],
+              'position_ms': progress_ms
+            })
           } catch (err) {
             console.log(err)
           }
         }
-      }
-    }).catch((err) => {
-      console.log(err)
+        if (response.is_playing !== is_playing) {
+          if (is_playing) {
+            try {
+              memberSpotifyApi.play()
+            } catch (err) {
+              console.log(err)
+            }
+          } else {
+            try {
+              memberSpotifyApi.pause()
+            } catch (err) {
+              console.log(err)
+            }
+          }
+        }
+      }).catch((err) => {
+        console.log(err)
+      })
     })
-  })
+  }, [])
 
-  // const searchSong = async (elem) => {
-  //   setSongSearch(elem)
-  //   setSearchList([])
-  //   try {
-  //     const response = await hostSpotifyApi.searchTracks(songSearch)
-  //     response.tracks.items.forEach((track) => {
-  //       setSearchList(searchList => searchList.concat({
-  //         uri: track.uri,
-  //         artist: track.artists[0].name,
-  //         name: track.name,
-  //         albumArt: track.album.images[0].url
-  //       }))
-  //     })
-  //   } catch (err) {
-  //     console.log(err)
-  //   }
-  // }
+  const searchSong = async (elem) => {
+    setSongSearch(elem)
+    setSearchList([])
+    try {
+      const response = await memberSpotifyApi.searchTracks(songSearch)
+      response.tracks.items.forEach((track) => {
+        setSearchList(searchList => searchList.concat({
+          uri: track.uri,
+          artist: track.artists[0].name,
+          name: track.name,
+          albumArt: track.album.images[0].url
+        }))
+      })
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
   const leaveRoom = () => {
     try {
@@ -97,15 +105,19 @@ const MemberRoom = ({ socket }) => {
           <img src={`${currPlaying.albumArt}`} style={{ height: 150 }}/>
         </div>
       )}
-      {/* <div>
+      <p>click on song to add to queue</p>
+      <input placeholder='Search a song' onChange={(e) => searchSong(e.target.value)} />
+      <div>
         {searchList.map(elem => (
           <Songs 
-            key={elem.uri}
-            hostSpotifyApi={hostSpotifyApi}
+            key={generateRandomStr(5)}
+            socketOrApi={socket}
             {...elem}
-          />
+            isHost={false}
+            roomID={roomID}
+        />
         ))}
-      </div> */}
+      </div>
     </div>
   )
 }

@@ -46,6 +46,19 @@ io.on('connection', (socket) => {
   //   })
   // })
 
+  // queues song from member room to the host id
+  socket.on('queueFromMember', ({ uri, roomID }) => {
+    Object.keys(allRooms).forEach(key => {
+      if (key === roomID) {
+        allRooms[roomID].forEach(obj => {
+          if (obj.host) {
+            socket.to(obj.id).emit('queueToHost', uri)
+          }
+        })
+      }
+    })
+  })
+
   socket.on('songVisuals', ({ roomID, name, albumArt }) => {
     Object.keys(allRooms).forEach(key => {
       if (key === roomID) {
@@ -61,7 +74,7 @@ io.on('connection', (socket) => {
     Object.keys(allRooms).forEach(key => {
       if (key === roomID) {
         allRooms[roomID].forEach(obj => {
-          socket.to(obj.id).emit('hostInfo', { is_playing, uri, progress_ms })
+          socket.to(obj.id).emit('hostInfo', { is_playing, uri, progress_ms, name, albumArt })
           socket.emit('host', { name, albumArt, is_playing })
         })
       }
