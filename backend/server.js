@@ -33,17 +33,39 @@ io.on('connection', (socket) => {
   const id = socket.id
   console.log(id)
 
+  // socket.on('test', ({ str, roomID }) => {
+  //   console.log('this should be above the other jawns')
+  //   socket.emit('yeet', str)
+  //   Object.keys(allRooms).forEach(key => {
+  //     if (key === roomID) {
+  //       console.log('hiyoo')
+  //       allRooms[roomID].forEach(obj => {
+  //         socket.to(obj.id).emit('testRun', str)
+  //       })
+  //     }
+  //   })
+  // })
+
+  socket.on('songVisuals', ({ roomID, name, albumArt }) => {
+    Object.keys(allRooms).forEach(key => {
+      if (key === roomID) {
+        allRooms[roomID].forEach(obj => {
+          socket.to(obj.id).emit('visualInfo', { name, albumArt })
+        })
+      }
+    })
+  })
+
   // sends the host's info to all room members. 
   socket.on('currentUserInfo', ({ is_playing, uri, progress_ms, roomID, name, albumArt }) => {
     Object.keys(allRooms).forEach(key => {
       if (key === roomID) {
         allRooms[roomID].forEach(obj => {
           socket.to(obj.id).emit('hostInfo', { is_playing, uri, progress_ms, name, albumArt })
+          socket.emit('host', { name, albumArt, is_playing })
         })
       }
     })
-    // checking emission rate.
-    socket.emit('host', name)
   })
 
   // creating a room. 

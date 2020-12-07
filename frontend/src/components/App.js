@@ -5,7 +5,7 @@ import RoomEntry from './RoomEntry'
 import HostRoom from './HostRoom'
 import MemberRoom from './MemberRoom'
 import socketIOClient from 'socket.io-client'
-const socket = socketIOClient.connect('http://192.168.0.64:8888')
+const socket = socketIOClient('http://192.168.0.64:8888')
 
 const App = () => (
   <Router>

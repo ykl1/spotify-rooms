@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
-import { getQueryStringParams } from '../global'
-
+import { getQueryStringParams, generateRandomStr } from '../global'
 
 const RoomEntry = ({ socket }) => {
   const [roomID, setRoomID] = useState('')
@@ -36,15 +35,6 @@ const RoomEntry = ({ socket }) => {
       alert('Room does not exist, please try again.')
     }
   })
-
-  const generateRandomStr = (length) => {
-    let text = ''
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    for (let i = 0; i < length; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length))
-    }
-    return text
-  }
 
   return (
     <div>

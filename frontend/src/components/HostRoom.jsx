@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
-import { getQueryStringParams } from '../global'
+import { getQueryStringParams, generateRandomStr } from '../global'
 import Spotify from 'spotify-web-api-js'
 import Songs from './Songs'
 
-const HostRoom = ({ socket }) => {
+const HostRoom = ({socket}) => {
   const hostSpotifyApi = new Spotify()
   const { roomID } = useParams()
   const { socketID } = useParams()
@@ -13,38 +13,50 @@ const HostRoom = ({ socket }) => {
   hostSpotifyApi.setAccessToken(params.access_token)
   const history = useHistory()
 
-  const [currPlaying, setNowPlaying] = useState({ name: 'Not Checked', albumArt: '' })
+  const [currPlaying, setNowPlaying] = useState({ name: 'no name', albumArt: 'no url' })
   const [songSearch, setSongSearch] = useState('')
   const [searchList, setSearchList] = useState([])
-
-// boolean 
+  const [songSwitched, setSongSwitched] = useState(false)
 
   // useEffect(() => {
   //   const interval = setInterval(() => {
-  //     hostSpotifyApi.getMyCurrentPlaybackState()
-  //       .then((response) => {
-  //         if (currPlaying.name !== response.item.name) {
-  //           setNowPlaying({
-  //             name: response.item.name,
-  //             albumArt: response.item.album.images[0].url
-  //           })
-  //         }
-  //       }).catch((err) => {
-  //         console.log(err)
-  //       })
+  //     let str = 'hi theredddd23'
+  //     socket.emit('test', { str, roomID })
   //   }, 5000)
   //   return () => clearInterval(interval)
-  // }, [])
+  // }, [noRepeats])
+
+  // socket.on('yeet', str => {
+  //   setIsPlaying(!isPlaying)
+  //   console.log(str)
+  // })
+
+  useEffect(() => {
+    hostSpotifyApi.getMyCurrentPlaybackState().then((response) => {
+      console.log(`useEffect: ${response.item.name}`)
+      console.log(`useEffect: ${response.item.album.images[0].url}`)
+      setNowPlaying({
+        name: response.item.name,
+        albumArt: response.item.album.images[0].url
+      })
+      socket.emit('songVisuals', {
+        roomID,
+        name: response.item.name,
+        albumArt: response.item.album.images[0].url
+      })
+    }).catch((err) => {
+      console.log(`Error: ${err}`)
+    })
+  }, [songSwitched])
 
   useEffect(() => {
     const interval = setInterval(() => {
-      hostSpotifyApi.getMyCurrentPlaybackState()
-      .then((response) => {
-        let name = response.item.name
-        let albumArt = response.item.album.images[0].url
+      hostSpotifyApi.getMyCurrentPlaybackState().then((response) => {
         let is_playing = response.is_playing
         let uri = response.item.uri
-        let progress_ms = response.progress_ms + 300
+        let progress_ms = response.progress_ms
+        let name = response.item.name
+        let albumArt = response.item.album.images[0].url
 
         socket.emit('currentUserInfo', {
           is_playing,
@@ -52,22 +64,21 @@ const HostRoom = ({ socket }) => {
           progress_ms,
           roomID,
           name,
-          albumArt,
+          albumArt
         })
       }).catch((err) => {
-        console.log(err)
+        console.log(`Error: ${err}`)
       })
     }, 5000)
     return () => clearInterval(interval)
   }, [])
 
-  socket.on('host', data => {
-    console.log(data)
+  socket.on('host', ({ name, albumArt, is_playing }) => {
+    console.log('this is the returned jawn on host')
   })
 
   // // get queued songs from non-host users
   // socket.on('getQueuedSong', data => {
-
   // })
 
   const searchSong = async (elem) => {
@@ -84,41 +95,41 @@ const HostRoom = ({ socket }) => {
         }))
       })
     } catch (err) {
-      console.log(err)
+      console.log(`Error: ${err}`)
     }
   }
 
   const leaveRoom = () => {
-    try {
-      hostSpotifyApi.pause()
-    } catch (err) {
-      console.log(err)
-    }
+    hostSpotifyApi.pause().catch((err) => {
+      console.log(`Error: ${err}`)
+    })
     socket.emit('leave', { roomID, socketID })
     history.push(`/RoomEntry/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
   }
 
-  const skipPlayback = () => {
+  const skipPlayback = async () => {
     try {
-      hostSpotifyApi.skipToNext()
+      await hostSpotifyApi.skipToNext()
+      await setTimeout(() => setSongSwitched(!songSwitched), 250)
     } catch (err) {
-      console.log(err)
+      console.log(`Error: ${err}`)
     }
   }
 
-  const resumePlayback = () => {
+  const resumePlayback = async () => {
     try {
-      hostSpotifyApi.play()
+      await hostSpotifyApi.play()
+      socket.emit('asdf', )
     } catch (err) {
-      console.log(err)
+      console.log(`Error: ${err}`)
     }
   }
 
-  const pausePlayback = () => {
+  const pausePlayback = async () => {
     try {
-      hostSpotifyApi.pause()
+      await hostSpotifyApi.pause()
     } catch (err) {
-      console.log(err)
+      console.log(`Error: ${err}`)
     }
   }
 
@@ -127,7 +138,7 @@ const HostRoom = ({ socket }) => {
       <h1>This is the host room</h1>
       <button onClick={() => leaveRoom()}>Leave Room</button>
       <div>
-        Now Playing: { `${currPlaying.name}` }
+        <p>{`Now Playing: ${currPlaying.name}`}</p>
       </div>
       <img src={`${currPlaying.albumArt}`} style={{ height: 250 }}/>
       <br/>
@@ -139,9 +150,10 @@ const HostRoom = ({ socket }) => {
       <div>
         {searchList.map(elem => (
           <Songs 
-            key={elem.uri}
-            hostSpotifyApi={hostSpotifyApi}
+            key={generateRandomStr(5)}
+            socketOrApi={hostSpotifyApi}
             {...elem}
+            isHost={true}
           />
         ))}
       </div>

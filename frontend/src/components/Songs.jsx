@@ -1,12 +1,17 @@
 import React from 'react'
 
-const Songs = ({ hostSpotifyApi, uri, artist, name, albumArt }) => {
+const Songs = ({ socketOrApi, uri, artist, name, albumArt, isHost }) => {
   const queueSong = () => {
-    try {
-      hostSpotifyApi.queue(uri)
-    } catch (err) {
-      console.log(err)
+    if (isHost) {
+      try {
+        socketOrApi.queue(uri)
+      } catch (err) {
+        console.log(err)
+      }
+    } else {
+      
     }
+    
   }
   
   return (
