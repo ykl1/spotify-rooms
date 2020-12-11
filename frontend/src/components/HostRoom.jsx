@@ -5,11 +5,11 @@ import axios from 'axios'
 import Spotify from 'spotify-web-api-js'
 import Songs from './Songs'
 import Queue from './Queue'
+import { RowWrapper, Wrapper, SpotifyButton, Input } from '../styles/styledComponents'
 
 const HostRoom = ({socket}) => {
   const hostSpotifyApi = new Spotify()
   const { roomID } = useParams()
-  const { socketID } = useParams()
   const { queryParams } = useParams()
   const params = getQueryStringParams(queryParams)
   hostSpotifyApi.setAccessToken(params.access_token)
@@ -164,33 +164,45 @@ const HostRoom = ({socket}) => {
 
   return (
     <div>
-      <div>
-        <h1>This is the host room</h1>
-        <button onClick={() => saveRoom()}>Save Room and Exit</button>
-        <button onClick={() => leaveRoom()}>Exit</button>
-        <p>{`Now Playing: ${currPlaying.name}`}</p>
-        <img src={`${currPlaying.albumArt}`} style={{ height: 250 }}/>
-        <br/>
-        <button onClick={() => skipPlayback()}>Skip</button>
-        <button onClick={() => resumePlayback()}>Resume</button>
-        <button onClick={() => pausePlayback()}>Pause</button>
-      </div>
-
-      <div>
-        <h1>Current Queue</h1>
-        {currentQueue.map(elem => (
-          <Queue 
-            key={generateRandomStr(5)}
-            name={elem.name}
-            albumArt={elem.albumArt}
-            artist={elem.artist}
-          />
-        ))}
-      </div>
-
-      <div>
-        <p>click on song to add to queue</p>
-        <input placeholder='Search a song' onChange={(e) => searchSong(e.target.value)} />
+      <RowWrapper style={{ margin: '3em 15em', background: '#1c1c1c', borderRadius: '1em'}}>
+        <Wrapper style={{ margin: 'auto 4em' }}>
+          <p style={{ color: '#2ac96a', maxWidth: 300, wordWrap: 'break-word' }}>{`${currPlaying.name}`}</p>
+          <img src={`${currPlaying.albumArt}`} style={{ height: 300, borderRadius: '0.75em' }}/>
+          <br/>
+          <RowWrapper>
+            <SpotifyButton onClick={() => skipPlayback()}>Skip</SpotifyButton>
+            <SpotifyButton onClick={() => resumePlayback()}>Resume</SpotifyButton>
+            <SpotifyButton onClick={() => pausePlayback()}>Pause</SpotifyButton>
+          </RowWrapper>
+        </Wrapper>
+        <Wrapper style={{ margin: 'auto 4em'}}>
+          <h1 style={{ color: '#2ac96a', fontSize: '1.5em' }}>{`Room Code: ${roomID}`}</h1>
+          <RowWrapper>
+            <SpotifyButton onClick={() => saveRoom()}>Save Room and Exit</SpotifyButton>
+            <SpotifyButton onClick={() => leaveRoom()}>Exit</SpotifyButton>
+          </RowWrapper>
+        </Wrapper>
+      </RowWrapper>
+      <Wrapper>
+        <h1 style={{ color: 'white', fontSize: '2em' }}>Queue</h1>
+      </Wrapper>
+      <Wrapper>
+        <div>
+          {currentQueue.map(elem => (
+            <Queue 
+              key={generateRandomStr(5)}
+              name={elem.name}
+              albumArt={elem.albumArt}
+              artist={elem.artist}
+            />
+          ))}
+        </div>
+        <div>
+          <Input search placeholder='Search a song' onChange={(e) => searchSong(e.target.value)} />
+        </div>
+      </Wrapper>
+      <Wrapper>
+        <div>
         {searchList.map(elem => (
           <Songs 
             key={generateRandomStr(5)}
@@ -201,7 +213,8 @@ const HostRoom = ({socket}) => {
             roomID={roomID}
           />
         ))}
-      </div>
+        </div>
+      </Wrapper>
     </div>
   )
 }

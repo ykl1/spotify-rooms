@@ -16,10 +16,9 @@ const Songs = ({ socket, spotifyApi, uri, artist, name, albumArt, isHost, roomID
   }
   
   return (
-    <div onClick={() => queueSong()}>
-      <img src={`${albumArt}`} style={{ height: 45, display: 'inline-block' }}/>
-      <p style={{ display: 'inline-block' }}>{artist}: </p>
-      <p style={{ display: 'inline-block' }}>{ name}</p>
+    <div style={{ margin: '0.25em' }} onClick={() => queueSong()}>
+      <img src={`${albumArt}`} style={{ height: 45, display: 'inline-block', borderRadius: '0.25em' }}/>
+      <p style={{ color: '#b8b8b8', display: 'inline-block'}}>{`${artist}: ${name}`}</p>
     </div>
   )
 }
