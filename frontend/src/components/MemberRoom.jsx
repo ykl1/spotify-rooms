@@ -123,7 +123,6 @@ const MemberRoom = ({ socket }) => {
         <div>
           <div>
             <h1>This is the member room</h1>
-            <button onClick={() => leaveRoom()}>Sync with host</button>
             <button onClick={() => leaveRoom()}>Leave Room</button>
             {currPlaying.skipped && (
               <div>

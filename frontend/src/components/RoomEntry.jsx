@@ -38,9 +38,17 @@ const RoomEntry = ({ socket }) => {
     socket.emit('joinRoom', { roomID, userInfo })
   }
 
-  socket.on('isJoined', ({ isValidRoom, id }) => {
+  socket.on('isJoined', async ({ isValidRoom, id, isEmpty, userInfo, roomID }) => {
+    let temp = await axios.post('http://192.168.0.64:8888/roomStorage/roomExists', { roomID })
     if (isValidRoom) {
-      history.push(`/MemberRoom/${roomID}/${id}/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
+      if (isEmpty) {
+        history.push(`/HostRoom/${roomID}/${id}/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
+      } else {
+        history.push(`/MemberRoom/${roomID}/${id}/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
+      }
+    } else if (temp.data) {
+      let room = roomID
+      socket.emit('create', { room, userInfo })
     } else {
       alert('Room does not exist, please try again.')
     }

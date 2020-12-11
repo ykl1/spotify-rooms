@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import { getQueryStringParams, generateRandomStr } from '../global'
+import axios from 'axios'
 import Spotify from 'spotify-web-api-js'
 import Songs from './Songs'
 import Queue from './Queue'
@@ -34,8 +35,25 @@ const HostRoom = ({socket}) => {
     })
   }, [currPlaying])
 
-  useEffect(() => {
-    // queues song into Host's queue from member room.
+  const initialQueue = (elem, i) => {
+    setTimeout(() => {
+      hostSpotifyApi.queue(elem.uri)
+      console.log(i)
+    }, 500 * i)
+  }
+
+  useEffect(async () => {
+    let temp = await axios.post('http://192.168.0.64:8888/roomStorage/roomExists', { roomID })
+    if (temp.data) {
+      let storedQueue = await axios.post('http://192.168.0.64:8888/roomStorage/getRoomData', { roomID })
+      let i = 0
+      storedQueue.data.forEach((elem) => {
+        initialQueue(elem, i)
+        i += 1
+      })
+      setCurrentQueue(storedQueue.data)
+    }
+
     socket.on('host', ({ name, albumArt, is_playing }) => {
       console.log('this is the returned test jawn on host')
     })
@@ -97,13 +115,33 @@ const HostRoom = ({socket}) => {
     }
   }
 
+  const saveRoom = async () => {
+    hostSpotifyApi.pause().catch((err) => {
+      console.log(`Error: ${err}`)
+    })
+    try {
+      let temp = await axios.post('http://192.168.0.64:8888/roomStorage/roomExists', { roomID })
+      let queue = currentQueue
+      if (temp.data) {
+        console.log('hi')
+        await axios.post('http://192.168.0.64:8888/roomStorage/modifyRoomData', { roomID, queue })
+      } else {
+        await axios.post('http://192.168.0.64:8888/roomStorage/saveRoomData', { roomID, queue })
+      }
+      socket.emit('hostLeave', { roomID, socketID })
+      history.push(`/RoomEntry/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
+    } catch (err) {
+      console.log(`Error: ${err}`)
+    }
+  }
+
   const leaveRoom = () => {
     hostSpotifyApi.pause().catch((err) => {
       console.log(`Error: ${err}`)
     })
-    console.log('hihi')
     socket.emit('hostLeave', { roomID, socketID })
     history.push(`/RoomEntry/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
+    
   }
 
   const skipPlayback = async () => {
@@ -135,10 +173,9 @@ const HostRoom = ({socket}) => {
     <div>
       <div>
         <h1>This is the host room</h1>
-        <button onClick={() => leaveRoom()}>Leave Room</button>
-        <div>
-          <p>{`Now Playing: ${currPlaying.name}`}</p>
-        </div>
+        <button onClick={() => saveRoom()}>Save Room and Exit</button>
+        <button onClick={() => leaveRoom()}>Exit</button>
+        <p>{`Now Playing: ${currPlaying.name}`}</p>
         <img src={`${currPlaying.albumArt}`} style={{ height: 250 }}/>
         <br/>
         <button onClick={() => skipPlayback()}>Skip</button>

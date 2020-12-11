@@ -61,14 +61,19 @@ module.exports = io => {
     // joining a room
     socket.on('joinRoom', ({ roomID, userInfo }) => {
       let isValidRoom = false
+      let isEmpty = false
       userInfo.id = id
       Object.keys(allRooms).forEach(key => {
         if (key === roomID) {
           isValidRoom = true
+          if (allRooms[key].length === 0) {
+            userInfo.host = true
+            isEmpty = true
+          }
           allRooms[key].push(userInfo)
         }
       })
-      socket.emit('isJoined', { isValidRoom, id })
+      socket.emit('isJoined', { isValidRoom, id, isEmpty, userInfo, roomID })
       console.log(allRooms)
     })
 

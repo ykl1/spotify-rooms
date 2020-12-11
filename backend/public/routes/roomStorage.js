@@ -45,7 +45,7 @@ router.post('/getRoomData', async (req, res) => {
 router.post('/modifyRoomData', async (req, res, next) => {
   const { roomID, queue } = req.body
   try {
-    await Room.findOneAndUpdate({ roomID }, { queue })
+    await Room.findOneAndUpdate({ roomID, queue })
     res.send('successfully updated the queue')
   } catch {
     next(new Error('unable to update the queue'))

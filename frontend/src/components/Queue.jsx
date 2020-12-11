@@ -1,6 +1,5 @@
 import React from 'react'
 
-// is uri necessary?
 const Queue = ({ name, albumArt, artist }) => {
   return (
     <div>
