@@ -20,23 +20,8 @@ const MemberRoom = ({ socket }) => {
   const [currentQueue, setCurrentQueue] = useState([])
 
   useEffect(() => {
-    memberSpotifyApi.getMyCurrentPlaybackState().then((response) => {
-      let uri = response.item.uri
-      if (currentQueue.length !== 0) {
-        if (uri === currentQueue[0].uri) {
-          console.log(`This is the current: ${uri}`)
-          console.log(`This is the first item in the queue: ${currentQueue[0].uri}`)
-          setCurrentQueue(currentQueue.filter((elem => elem.uri !== uri)))
-        }
-      }
-    }).catch((err) => {
-      console.log(`Error: ${err}`)
-    })
-  }, [currPlaying])
-
-  useEffect(() => {
-    socket.on('queueDisplay', ({ uri, name, albumArt, artist }) => {
-      setCurrentQueue(searchList => [...searchList, { uri, name, albumArt, artist }])
+    socket.on('currentQueue', currentQueue => {
+      setCurrentQueue(currentQueue)
     })
 
     socket.on('hostLeft', (hi) => {

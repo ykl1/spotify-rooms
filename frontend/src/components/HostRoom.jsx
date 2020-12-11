@@ -25,20 +25,18 @@ const HostRoom = ({socket}) => {
       let uri = response.item.uri
       if (currentQueue.length !== 0) {
         if (uri === currentQueue[0].uri) {
-          console.log(`This is the current: ${uri}`)
-          console.log(`This is the first item in the queue: ${currentQueue[0].uri}`)
           setCurrentQueue(currentQueue.filter((elem => elem.uri !== uri)))
         }
       }
     }).catch((err) => {
       console.log(`Error: ${err}`)
     })
+    socket.emit('queueToMember', { roomID, currentQueue })
   }, [currPlaying])
 
   const initialQueue = (elem, i) => {
     setTimeout(() => {
       hostSpotifyApi.queue(elem.uri)
-      console.log(i)
     }, 500 * i)
   }
 
@@ -53,10 +51,6 @@ const HostRoom = ({socket}) => {
       })
       setCurrentQueue(storedQueue.data)
     }
-
-    socket.on('host', ({ name, albumArt, is_playing }) => {
-      console.log('this is the returned test jawn on host')
-    })
 
     socket.on('queueDisplay', ({ uri, name, albumArt, artist }) => {
       setCurrentQueue(searchList => [...searchList, { uri, name, albumArt, artist }])
@@ -123,12 +117,11 @@ const HostRoom = ({socket}) => {
       let temp = await axios.post('http://192.168.0.64:8888/roomStorage/roomExists', { roomID })
       let queue = currentQueue
       if (temp.data) {
-        console.log('hi')
         await axios.post('http://192.168.0.64:8888/roomStorage/modifyRoomData', { roomID, queue })
       } else {
         await axios.post('http://192.168.0.64:8888/roomStorage/saveRoomData', { roomID, queue })
       }
-      socket.emit('hostLeave', { roomID, socketID })
+      socket.emit('hostLeave', { roomID })
       history.push(`/RoomEntry/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
     } catch (err) {
       console.log(`Error: ${err}`)
@@ -139,7 +132,7 @@ const HostRoom = ({socket}) => {
     hostSpotifyApi.pause().catch((err) => {
       console.log(`Error: ${err}`)
     })
-    socket.emit('hostLeave', { roomID, socketID })
+    socket.emit('hostLeave', { roomID })
     history.push(`/RoomEntry/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
     
   }

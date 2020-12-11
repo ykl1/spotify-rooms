@@ -5,22 +5,22 @@ module.exports = io => {
     // when user is connected
     console.log('a user is connected')
     const id = socket.id
-    console.log(id)
 
-    // purpose of displaying the queue of songs in the front end. 
+    // display the queue of songs in the front end. 
     socket.on('queueDisplay', ({ uri, name, albumArt, roomID, isHost, artist }) => {
-      Object.keys(allRooms).forEach(key => {
-        if (key === roomID) {
-          allRooms[roomID].forEach(obj => {
-            socket.to(obj.id).emit('queueDisplay', { uri, name, albumArt, artist })
-          })
-          if (isHost) {
-            socket.emit('queueDisplay', { uri, name, albumArt, artist })
-          } else {
-            socket.emit('queueDisplay', { uri, name, albumArt, artist })
+      if (isHost) {
+        socket.emit('queueDisplay', { uri, name, albumArt, artist })
+      } else {
+        Object.keys(allRooms).forEach(key => {
+          if (key === roomID) {
+            allRooms[roomID].forEach(obj => {
+              if (obj.host) {
+                socket.to(obj.id).emit('queueDisplay', { uri, name, albumArt, artist })
+              }
+            })
           }
-        }
-      })
+        })
+      }
     })
 
     // queues song from member room to the host id
@@ -35,6 +35,17 @@ module.exports = io => {
         }
       })
     })
+
+    // sends display queue to all members within same room. 
+    socket.on('queueToMember', ({ roomID, currentQueue }) => {
+      Object.keys(allRooms).forEach(key => {
+        if (key === roomID) {
+          allRooms[roomID].forEach(obj => {
+            socket.to(obj.id).emit('currentQueue', currentQueue)
+          })
+        }
+      })
+    })
     
     // sends the host's info to all room members. 
     socket.on('currentUserInfo', ({ is_playing, uri, progress_ms, roomID, name, albumArt }) => {
@@ -42,13 +53,10 @@ module.exports = io => {
         if (key === roomID) {
           allRooms[roomID].forEach(obj => {
             socket.to(obj.id).emit('hostInfo', { is_playing, uri, progress_ms, name, albumArt })
-            socket.emit('host', { name, albumArt, is_playing })
           })
         }
       })
     })
-
-    // joining a room that exists in the backend, but not in the socket. 
 
     // creating a room. 
     socket.on('create', ({ room, userInfo }) => {
@@ -78,7 +86,7 @@ module.exports = io => {
     })
 
     // host leaves a room
-    socket.on('hostLeave', ({ roomID, socketID }) => {
+    socket.on('hostLeave', ({ roomID }) => {
       Object.keys(allRooms).forEach(key => {
         if (key === roomID) {
           allRooms[roomID].forEach((obj) => {
@@ -102,15 +110,6 @@ module.exports = io => {
         }
       })
       console.log(allRooms)
-    })
-
-    // get all users in specific room
-    socket.on('getUsers', (roomID) => {
-      Object.keys(allRooms).forEach(key => {
-        if (key === roomID) {
-          socket.emit('roomUsers', allRooms[key])
-        }
-      })
     })
 
     // when user disconnects

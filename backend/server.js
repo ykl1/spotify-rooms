@@ -36,7 +36,6 @@ app.use(express.json())
 
 app.use('/roomStorage', RoomStorage)
 
-// error handler middleware
 app.use((err, req, res) => {
   res.status(500).send(`${err}`)
 })

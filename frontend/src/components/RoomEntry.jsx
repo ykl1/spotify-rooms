@@ -15,16 +15,15 @@ const RoomEntry = ({ socket }) => {
     refresh_token: params.refresh_token,
   }
 
+  // checks if the roomID already exists in the database. 
   const createRoom = async () => {
     let roomID = 0
     let roomExists = true
-    // checks if the roomID already exists in the database. 
     while (roomExists) {
       roomID = generateRandomStr(5)
       let temp = await axios.post('http://192.168.0.64:8888/roomStorage/roomExists', { roomID })
       roomExists = temp.data
     }
-    console.log(roomID)
     let room = roomID
     socket.emit('create', { room, userInfo })
   }

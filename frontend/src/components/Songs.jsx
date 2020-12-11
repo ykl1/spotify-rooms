@@ -12,7 +12,6 @@ const Songs = ({ socket, spotifyApi, uri, artist, name, albumArt, isHost, roomID
     } else {
       socket.emit('queueFromMember', { uri, roomID } )
       socket.emit('queueDisplay', { uri, name, albumArt, roomID, isHost, artist })
-      console.log('hihihihi')
     }
   }
   
