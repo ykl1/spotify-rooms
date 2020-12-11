@@ -3,6 +3,7 @@ import { useHistory, useParams } from 'react-router-dom'
 import { getQueryStringParams, generateRandomStr } from '../global'
 import Spotify from 'spotify-web-api-js'
 import Songs from './Songs'
+import Queue from './Queue'
 
 const HostRoom = ({socket}) => {
   const hostSpotifyApi = new Spotify()
@@ -16,43 +17,31 @@ const HostRoom = ({socket}) => {
   const [currPlaying, setNowPlaying] = useState({ name: 'no name', albumArt: 'no url' })
   const [songSearch, setSongSearch] = useState('')
   const [searchList, setSearchList] = useState([])
-  const [songSwitched, setSongSwitched] = useState(false)
-
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     let str = 'hi theredddd23'
-  //     socket.emit('test', { str, roomID })
-  //   }, 5000)
-  //   return () => clearInterval(interval)
-  // }, [noRepeats])
-
-  // socket.on('yeet', str => {
-  //   setIsPlaying(!isPlaying)
-  //   console.log(str)
-  // })
+  const [currentQueue, setCurrentQueue] = useState([])
 
   useEffect(() => {
     hostSpotifyApi.getMyCurrentPlaybackState().then((response) => {
-      console.log(`useEffect: ${response.item.name}`)
-      console.log(`useEffect: ${response.item.album.images[0].url}`)
-      setNowPlaying({
-        name: response.item.name,
-        albumArt: response.item.album.images[0].url
-      })
-      socket.emit('songVisuals', {
-        roomID,
-        name: response.item.name,
-        albumArt: response.item.album.images[0].url
-      })
+      let uri = response.item.uri
+      if (currentQueue.length !== 0) {
+        if (uri === currentQueue[0].uri) {
+          console.log(`This is the current: ${uri}`)
+          console.log(`This is the first item in the queue: ${currentQueue[0].uri}`)
+          setCurrentQueue(currentQueue.filter((elem => elem.uri !== uri)))
+        }
+      }
     }).catch((err) => {
       console.log(`Error: ${err}`)
     })
-  }, [songSwitched])
+  }, [currPlaying])
 
   useEffect(() => {
     // queues song into Host's queue from member room.
     socket.on('host', ({ name, albumArt, is_playing }) => {
       console.log('this is the returned test jawn on host')
+    })
+
+    socket.on('queueDisplay', ({ uri, name, albumArt, artist }) => {
+      setCurrentQueue(searchList => [...searchList, { uri, name, albumArt, artist }])
     })
 
     socket.on('queueToHost', uri => {
@@ -66,7 +55,7 @@ const HostRoom = ({socket}) => {
         let progress_ms = response.progress_ms
         let name = response.item.name
         let albumArt = response.item.album.images[0].url
-
+        
         setNowPlaying({
           name,
           albumArt
@@ -83,10 +72,12 @@ const HostRoom = ({socket}) => {
       }).catch((err) => {
         console.log(`Error: ${err}`)
       })
-    }, 2000)
-    return () => clearInterval(interval)
+    }, 1250)
+    return () => {
+      clearInterval(interval)
+      setCurrentQueue([])
+    }
   }, [])
-
 
   const searchSong = async (elem) => {
     setSongSearch(elem)
@@ -110,14 +101,14 @@ const HostRoom = ({socket}) => {
     hostSpotifyApi.pause().catch((err) => {
       console.log(`Error: ${err}`)
     })
-    socket.emit('leave', { roomID, socketID })
+    console.log('hihi')
+    socket.emit('hostLeave', { roomID, socketID })
     history.push(`/RoomEntry/access_token=${params.access_token}&refresh_token=${params.refresh_token}`)
   }
 
   const skipPlayback = async () => {
     try {
       await hostSpotifyApi.skipToNext()
-      await setTimeout(() => setSongSwitched(!songSwitched), 250)
     } catch (err) {
       console.log(`Error: ${err}`)
     }
@@ -142,23 +133,39 @@ const HostRoom = ({socket}) => {
 
   return (
     <div>
-      <h1>This is the host room</h1>
-      <button onClick={() => leaveRoom()}>Leave Room</button>
       <div>
-        <p>{`Now Playing: ${currPlaying.name}`}</p>
+        <h1>This is the host room</h1>
+        <button onClick={() => leaveRoom()}>Leave Room</button>
+        <div>
+          <p>{`Now Playing: ${currPlaying.name}`}</p>
+        </div>
+        <img src={`${currPlaying.albumArt}`} style={{ height: 250 }}/>
+        <br/>
+        <button onClick={() => skipPlayback()}>Skip</button>
+        <button onClick={() => resumePlayback()}>Resume</button>
+        <button onClick={() => pausePlayback()}>Pause</button>
       </div>
-      <img src={`${currPlaying.albumArt}`} style={{ height: 250 }}/>
-      <br/>
-      <button onClick={() => skipPlayback()}>Skip</button>
-      <button onClick={() => resumePlayback()}>Resume</button>
-      <button onClick={() => pausePlayback()}>Pause</button>
-      <p>click on song to add to queue</p>
-      <input placeholder='Search a song' onChange={(e) => searchSong(e.target.value)} />
+
       <div>
+        <h1>Current Queue</h1>
+        {currentQueue.map(elem => (
+          <Queue 
+            key={generateRandomStr(5)}
+            name={elem.name}
+            albumArt={elem.albumArt}
+            artist={elem.artist}
+          />
+        ))}
+      </div>
+
+      <div>
+        <p>click on song to add to queue</p>
+        <input placeholder='Search a song' onChange={(e) => searchSong(e.target.value)} />
         {searchList.map(elem => (
           <Songs 
             key={generateRandomStr(5)}
-            socketOrApi={hostSpotifyApi}
+            socket={socket}
+            spotifyApi={hostSpotifyApi}
             {...elem}
             isHost={true}
             roomID={roomID}
