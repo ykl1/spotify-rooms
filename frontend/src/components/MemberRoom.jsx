@@ -107,7 +107,6 @@ const MemberRoom = ({ socket }) => {
     <div>
       {!roomTerminated ? (
         <div>
-
           <RowWrapper style={{ margin: '3em 20em', background: '#1c1c1c', borderRadius: '1em'}}>
             <Wrapper>
               {currPlaying.skipped && (
@@ -117,17 +116,14 @@ const MemberRoom = ({ socket }) => {
                 </Wrapper>
               )}
             </Wrapper>
-            
             <Wrapper>
               <h1 style={{ color: '#2ac96a', fontSize: '1.5em' }}>{`Room Code: ${roomID}`}</h1>
               <SpotifyButton onClick={() => leaveRoom()}>Leave Room</SpotifyButton>
             </Wrapper>
           </RowWrapper>
-
           <Wrapper>
             <h1 style={{ color: 'white', fontSize: '2em' }}>Queue</h1>
           </Wrapper>
-
           <Wrapper>
             <div>
               {currentQueue.map(elem => (
@@ -143,7 +139,6 @@ const MemberRoom = ({ socket }) => {
               <Input search placeholder='Search a song' onChange={(e) => searchSong(e.target.value)} />
             </div>
           </Wrapper>
-
           <Wrapper>
             <div>
             {searchList.map(elem => (
